@@ -25,12 +25,12 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function task_status()
+    public function taskStatus()
     {
         return $this->belongsTo(TaskStatus::class);
     }
 
-    public function user()
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }

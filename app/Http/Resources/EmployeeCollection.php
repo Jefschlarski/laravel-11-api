@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class TaskCollection extends ResourceCollection
+class EmployeeCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -14,14 +14,14 @@ class TaskCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        $data = $this->collection->map(function ($task) {
-            return TaskResource::make($task);
+        $data = $this->collection->map(function ($employee) {
+            return EmployeeResource::make($employee);
         })->toArray();
 
         $count = count($data);
 
         return [
-            'tasks' => $data,
+            'employees' => $data,
             'count' => $count
         ];
     }

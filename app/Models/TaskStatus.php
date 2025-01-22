@@ -23,7 +23,7 @@ class TaskStatus extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function user()
+    public function createdBy()
     {
         return $this->belongsTo(User::class);
     }

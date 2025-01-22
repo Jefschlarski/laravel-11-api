@@ -19,7 +19,10 @@ class TaskStatusResource extends JsonResource
             'id'    => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'created_by' => $this->created_by,
+            'created_by' => [
+                'id' => $this->createdBy->id,
+                'name' => $this->createdBy->name
+            ],
         ];
     }
 }

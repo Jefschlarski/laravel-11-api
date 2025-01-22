@@ -15,12 +15,7 @@ class TaskStatusCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         $data = $this->collection->map(function ($task_status) {
-            return [
-                'id'          => $task_status->id,
-                'name'        => $task_status->name,
-                'description' => $task_status->description,
-                'created_by'  => $task_status->created_by,
-            ];
+            return TaskStatusResource::make($task_status);
         })->toArray();
 
         $count = count($data);

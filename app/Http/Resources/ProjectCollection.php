@@ -15,12 +15,7 @@ class ProjectCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         $data = $this->collection->map(function ($project) {
-            return [
-                'id'          => $project->id,
-                'name'        => $project->name,
-                'description' => $project->description,
-                'created_by'  => $project->created_by,
-            ];
+            return ProjectResource::make($project);
         })->toArray();
 
         $count = count($data);
