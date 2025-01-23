@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\TaskStatusCollection;
 use App\Http\Resources\TaskStatusResource;
+use App\Http\Utils\Error;
 use App\Models\TaskStatus;
 use Illuminate\Http\Request;
 use Validator;
@@ -15,7 +16,9 @@ class TaskStatusController extends Controller
      */
     public function index()
     {
-        return response()->json(TaskStatusCollection::make(TaskStatus::all()), 200);
+        return response()->json(TaskStatusCollection::make(TaskStatus::paginate(
+            perPage: 20,
+        )), 200);
     }
 
     /**
@@ -34,16 +37,12 @@ class TaskStatusController extends Controller
 
         $validated = $validator->validated();
 
-        $task_status = TaskStatus::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'created_by' => auth()->user()->id
-        ]);
+        $task_status = new TaskStatus();
+        $task_status->fill($validated);
+        $task_status->created_by = auth()->user()->id;
 
-        if (!$task_status) {
-            return response()->json([
-                'message' => 'Task status creation failed'
-            ], 500);
+        if (!$task_status->save()) {
+            return Error::makeResponse('Task status creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusResource::make($task_status), 201);
@@ -69,15 +68,13 @@ class TaskStatusController extends Controller
     public function update(Request $request, int $id)
     {
         $validator = Validator::make($request->all(),[
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'name' => 'string|max:255',
+            'description' => 'string',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
-        }
-
-        $validated = $validator->validated();
+        };
 
         $task_status = TaskStatus::find($id);
         if (!$task_status) {
@@ -86,14 +83,11 @@ class TaskStatusController extends Controller
             ], 404);
         }
 
-        $task_status->name = $validated['name'];
-        $task_status->description = $validated['description'];
-        $task_status->save();
+        $task_status->fill($validator->validated());
 
-        if (!$task_status) {
-            return response()->json([
-                'message' => 'Task status update failed'
-            ], 500);
+
+        if (!$task_status->save()) {
+            return Error::makeResponse('Task status update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusResource::make($task_status), 200);

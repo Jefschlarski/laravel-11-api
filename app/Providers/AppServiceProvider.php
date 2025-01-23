@@ -23,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        Gate::policy(Project::class, policy: ProjectPolicy::class);
+
         /**
          * @todo check if the user is root from the moment I have already implemented the user permissions and the user type
         */
@@ -31,31 +34,10 @@ class AppServiceProvider extends ServiceProvider
             return true;
         });
 
-        Gate::policy(Project::class, ProjectPolicy::class);
-        // Gate::define('access-projects', function ()
-        // {
-        //     // if (se não permitir) {
-        //     //     abort(Error::makeResponse('You are not allowed to access projects', Error::FORBIDDEN, 'Access Projects Gate'));
-        //     // }
-        //     return true;
-        // });
-
-        // Gate::define('list-projects', function ()
-        // {
-        //     return true;
-        // });
-
-        // // Verifica se o usuario tem a permissão para visualização de todos os projetos, usuarios que não tiverem essa permissão
-        // // só poderão visualizar os projetos a quais pertencem
-        // Gate::define('view-projects', function ()
-        // {
-        //     return true;
-        // });
-
-        // Gate::define('manage-projects', function ()
-        // {
-        //     return true;
-        // });
+        Gate::define('access-projects', function ()
+        {
+            return true;
+        });
 
         Gate::define('access-tasks', function ()
         {

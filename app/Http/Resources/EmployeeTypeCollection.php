@@ -4,4 +4,4 @@ namespace App\Http\Resources;
 
 use App\Extensions\Resources\ResourceCollection;
 
-class TaskStatusCollection extends ResourceCollection {}
+class EmployeeTypeCollection extends ResourceCollection {}

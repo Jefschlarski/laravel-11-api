@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProjectCollection;
 use App\Http\Resources\ProjectResource;
+use App\Http\Utils\Error;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Validator;
@@ -13,9 +14,16 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(ProjectCollection::make(Project::all()), 200);
+        if ($request->user()->cannot('viewAny', Project::class)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+        return response()->json(ProjectCollection::make(Project::paginate(
+            perPage: 20,
+        )), 200);
     }
 
     /**
@@ -23,6 +31,13 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
+
+        if ($request->user()->cannot('create', Project::class)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -32,18 +47,12 @@ class ProjectController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $validated = $validator->validated();
+        $project = new Project();
+        $project->fill($validator->validated());
+        $project->created_by = auth()->user()->id;
 
-        $project = Project::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'created_by' => auth()->user()->id
-        ]);
-
-        if (!$project) {
-            return response()->json([
-                'message' => 'Project creation failed'
-            ], 500);
+        if (!$project->save()) {
+            return Error::makeResponse('Project creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(ProjectResource::make($project), 201);
@@ -52,14 +61,22 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $project = Project::find($id);
+
         if (!$project) {
             return response()->json([
                 'message' => 'Project not found'
             ], 404);
         }
+
+        if ($request->user()->cannot('view', $project)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
         return response()->json(ProjectResource::make($project), 200);
     }
 
@@ -68,9 +85,10 @@ class ProjectController extends Controller
      */
     public function update(Request $request, int $id)
     {
+
         $validator = Validator::make($request->all(),[
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'name' => 'string|max:255',
+            'description' => 'string',
         ]);
 
         if ($validator->fails()) {
@@ -80,20 +98,23 @@ class ProjectController extends Controller
         $validated = $validator->validated();
 
         $project = Project::find($id);
+
         if (!$project) {
             return response()->json([
                 'message' => 'Project not found'
             ], 404);
         }
 
-        $project->name = $validated['name'];
-        $project->description = $validated['description'];
-        $project->save();
-
-        if (!$project) {
+        if ($request->user()->cannot('update', $project)) {
             return response()->json([
-                'message' => 'Project update failed'
-            ], 500);
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $project->fill($validated);
+
+        if (!$project->save()) {
+            return Error::makeResponse('Project update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(ProjectResource::make($project), 200);
@@ -102,14 +123,22 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $project = Project::find($id);
+
         if (!$project) {
             return response()->json([
                 'message' => 'Project not found'
             ], 404);
         }
+
+        if ($request->user()->cannot('delete', $project)) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
         $project->delete();
 
         return response()->noContent();

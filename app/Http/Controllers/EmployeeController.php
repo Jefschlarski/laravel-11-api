@@ -16,7 +16,9 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        return response()->json(EmployeeCollection::make(Employee::all()), 200);
+        return response()->json(EmployeeCollection::make(Employee::paginate(
+            perPage: 20,
+        )), 200);
     }
 
     /**
@@ -33,15 +35,11 @@ class EmployeeController extends Controller
             return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
         }
 
-        $validated = $validator->validated();
+        $employee = new Employee();
+        $employee->fill($validator->validated());
+        $employee->created_by = auth()->user()->id;
 
-        $employee = Employee::create([
-            'employee_type_id' => $validated['employee_type_id'],
-            'user_id' => $validated['user_id'],
-            'created_by' => auth()->user()->id
-        ]);
-
-        if (!$employee) {
+        if (!$employee->save()) {
             return Error::makeResponse('Employee creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
@@ -90,6 +88,7 @@ class EmployeeController extends Controller
         if (!$employee = Employee::find($id)) {
             return Error::makeResponse('Employee not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
         $employee->delete();
 
         return response()->noContent();
