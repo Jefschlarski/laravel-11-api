@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\EmployeeTypeCollection;
 use App\Http\Resources\EmployeeTypeResource;
 use App\Http\Utils\Error;
@@ -18,8 +19,8 @@ class EmployeeTypeController extends Controller
     {
         if ($request->user()->cannot('viewAny', EmployeeType::class)) {
             return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-
         }
+
         return response()->json(EmployeeTypeCollection::make(EmployeeType::paginate(
             perPage: 20,
         )), 200);
@@ -75,14 +76,6 @@ class EmployeeTypeController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        if (!$employeeType = EmployeeType::find($id)) {
-            return Error::makeResponse('Employee type not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
-        }
-
-        if ($request->user()->cannot('update', $employeeType)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
-
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:255',
             'description' => 'string',
@@ -90,6 +83,14 @@ class EmployeeTypeController extends Controller
 
         if ($validator->fails()) {
             return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
+        }
+
+        if (!$employeeType = EmployeeType::find($id)) {
+            return Error::makeResponse('Employee type not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+        }
+
+        if ($request->user()->cannot('update', $employeeType)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $employeeType->fill($validator->validated());

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\EmployeeCollection;
 use App\Http\Resources\EmployeeResource;
 use App\Http\Utils\Error;
@@ -14,8 +15,12 @@ class EmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->user()->cannot('viewAny', Employee::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(EmployeeCollection::make(Employee::paginate(
             perPage: 20,
         )), 200);
@@ -26,6 +31,10 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->user()->cannot('create', Employee::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         $validator = Validator::make($request->all(),[
             'employee_type_id' => 'required|integer|exists:employee_type,id',
             'user_id' => 'required|integer|exists:users,id',
@@ -49,11 +58,16 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         if (!$employee = Employee::find($id)) {
             return Error::makeResponse('Employee not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
+        if ($request->user()->cannot('view', $employee)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(EmployeeResource::make($employee), 200);
     }
 
@@ -74,6 +88,10 @@ class EmployeeController extends Controller
             return Error::makeResponse('Employee not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
+        if ($request->user()->cannot('update', $employee)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         if ($error = $employee->changeEmployeeType($validated['employee_type_id'])) {
             return $error->response();
         }
@@ -83,10 +101,14 @@ class EmployeeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         if (!$employee = Employee::find($id)) {
             return Error::makeResponse('Employee not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+        }
+
+        if ($request->user()->cannot('delete', $employee)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $employee->delete();

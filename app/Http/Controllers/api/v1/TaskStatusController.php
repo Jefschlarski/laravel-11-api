@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\TaskStatusCollection;
 use App\Http\Resources\TaskStatusResource;
 use App\Http\Utils\Error;
@@ -14,8 +15,12 @@ class TaskStatusController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->user()->cannot('viewAny', TaskStatus::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(TaskStatusCollection::make(TaskStatus::paginate(
             perPage: 20,
         )), 200);
@@ -26,13 +31,17 @@ class TaskStatusController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->user()->cannot('create', TaskStatus::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
         }
 
         $validated = $validator->validated();
@@ -51,14 +60,17 @@ class TaskStatusController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show(Request $request,int $id)
     {
         $task_status = TaskStatus::find($id);
         if (!$task_status) {
-            return response()->json([
-                'message' => 'Task status not found'
-            ], 404);
+            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
+        if ($request->user()->cannot('view', $task_status)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(TaskStatusResource::make($task_status), 200);
     }
 
@@ -73,14 +85,16 @@ class TaskStatusController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
         };
 
         $task_status = TaskStatus::find($id);
         if (!$task_status) {
-            return response()->json([
-                'message' => 'Task status not found'
-            ], 404);
+            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+        }
+
+        if ($request->user()->cannot('update', $task_status)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $task_status->fill($validator->validated());
@@ -96,14 +110,16 @@ class TaskStatusController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
-        $task_status = TaskStatus::find($id);
-        if (!$task_status) {
-            return response()->json([
-                'message' => 'Task tatus not found'
-            ], 404);
+        if (!$task_status = TaskStatus::find($id)) {
+            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
+        if ($request->user()->cannot('delete', $task_status)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         $task_status->delete();
 
         return response()->noContent();

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\ProjectCollection;
 use App\Http\Resources\ProjectResource;
 use App\Http\Utils\Error;
@@ -17,10 +18,9 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         if ($request->user()->cannot('viewAny', Project::class)) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 401);
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
+
         return response()->json(ProjectCollection::make(Project::paginate(
             perPage: 20,
         )), 200);
@@ -33,9 +33,7 @@ class ProjectController extends Controller
     {
 
         if ($request->user()->cannot('create', Project::class)) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 401);
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $validator = Validator::make($request->all(),[
@@ -106,9 +104,7 @@ class ProjectController extends Controller
         }
 
         if ($request->user()->cannot('update', $project)) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 401);
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $project->fill($validated);
@@ -134,9 +130,7 @@ class ProjectController extends Controller
         }
 
         if ($request->user()->cannot('delete', $project)) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 401);
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $project->delete();

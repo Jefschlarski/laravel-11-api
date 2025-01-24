@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Http\Utils\Error;
 use App\Models\User;
 use Hash;
 use Illuminate\Http\Request;
@@ -19,28 +21,19 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return Error::makeResponse($validator->errors(), Error::INVALID_DATA);
         }
 
-        $validated = $validator->validated();
+        $user = New User();
+        $user->fill($validator->validated());
+        $user->password = Hash::make($request->password);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'User registration failed'
-            ], 500);
+        if (!$user->save()) {
+            return Error::makeResponse('User creation failed', Error::INTERNAL_SERVER_ERROR);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-        if (!$token) {
-            return response()->json([
-                'message' => 'User auth token generation failed'
-            ], 500);
+        if (!$token = $user->createToken('auth_token')->plainTextToken) {
+            return Error::makeResponse('User auth token generation failed', Error::INTERNAL_SERVER_ERROR);
         }
 
         return response()->json([
@@ -61,19 +54,12 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $validated = $validator->validated();
-
-        if (!auth()->attempt($validated)) {
-            return response()->json([
-                'message' => 'Invalid login details'
-            ], 401);
+        if (!auth()->attempt($validator->validated())) {
+            return Error::makeResponse('Invalid credentials', Error::UNAUTHORIZED);
         }
 
-        $token = auth()->user()->createToken('auth_token')->plainTextToken;
-        if (!$token) {
-            return response()->json([
-                'message' => 'User auth token generation failed'
-            ], 500);
+        if (!$token = auth()->user()->createToken('auth_token')->plainTextToken) {
+            return Error::makeResponse('User auth token generation failed', Error::INTERNAL_SERVER_ERROR);
         }
 
         return response()->json([
@@ -88,8 +74,6 @@ class AuthController extends Controller
         if ($request->user()->currentAccessToken()->delete()) {
             return response()->noContent();
         }
-        return response()->json([
-            'message' => 'Logout failed'
-        ], 500);
+        return Error::makeResponse('Logout failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
     }
 }

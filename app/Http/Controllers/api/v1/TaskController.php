@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\api\v1;
 
+use App\Http\Controllers\Controller;
 use App\Http\Resources\TaskCollection;
 use App\Http\Resources\TaskResource;
 use App\Http\Utils\Error;
@@ -14,8 +15,12 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->user()->cannot('viewAny', Task::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(TaskCollection::make(Task::paginate(
             perPage: 20,
         )), 200);
@@ -26,6 +31,10 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->user()->cannot('create', task::class)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         $validator = Validator::make($request->all(),[
             'title' => 'required|string|max:255',
             'description' => 'string',
@@ -52,14 +61,17 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $task = Task::find($id);
         if (!$task) {
-            return response()->json([
-                'message' => 'Task not found'
-            ], 404);
+            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
+        if ($request->user()->cannot('view', $task)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         return response()->json(TaskResource::make($task), 200);
     }
 
@@ -76,19 +88,19 @@ class TaskController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
         }
-
-        $validated = $validator->validated();
 
         $task = Task::find($id);
         if (!$task) {
-            return response()->json([
-                'message' => 'Task not found'
-            ], 404);
+            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        $task->fill($validated);
+        if ($request->user()->cannot('update', $task)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
+        $task->fill($validator->validated());
 
         if (!$task->save()) {
             return Error::makeResponse('Task update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
@@ -100,14 +112,17 @@ class TaskController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $task = Task::find($id);
         if (!$task) {
-            return response()->json([
-                'message' => 'Task not found'
-            ], 404);
+            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
+
+        if ($request->user()->cannot('delete', $task)) {
+            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        }
+
         $task->delete();
 
         return response()->noContent();

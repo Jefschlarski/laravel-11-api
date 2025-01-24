@@ -3,8 +3,16 @@
 namespace App\Providers;
 
 use App\Http\Utils\Error;
+use App\Models\Employee;
+use App\Models\EmployeeType;
 use App\Models\Project;
+use App\Models\Task;
+use App\Models\TaskStatus;
+use App\Policies\EmployeePolicy;
+use App\Policies\EmployeeTypePolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\TaskPolicy;
+use App\Policies\TaskStatusPolicy;
 use Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,8 +31,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
         Gate::policy(Project::class, policy: ProjectPolicy::class);
+
+        Gate::policy(Task::class, policy: TaskPolicy::class);
+
+        Gate::policy(TaskStatus::class, policy: TaskStatusPolicy::class);
+
+        Gate::policy(Employee::class, policy: EmployeePolicy::class);
+
+        Gate::policy(EmployeeType::class, policy: EmployeeTypePolicy::class);
 
         /**
          * @todo check if the user is root from the moment I have already implemented the user permissions and the user type
