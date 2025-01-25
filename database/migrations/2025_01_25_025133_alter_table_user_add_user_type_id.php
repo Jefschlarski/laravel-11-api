@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_status', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 255);
-            $table->text('description')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users');
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreignId('user_type_id')->constrained('user_type');
         });
     }
 
@@ -25,6 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('task_status');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign('users_user_type_id_foreign');
+            $table->dropColumn('user_type_id');
+        });
     }
 };

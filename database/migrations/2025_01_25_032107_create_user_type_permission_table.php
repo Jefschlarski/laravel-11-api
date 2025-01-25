@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('employee', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('employee_type_id')->constrained('employee_type');
-            $table->foreignId('user_id')->constrained('users');
+        Schema::create('user_type_permission', function (Blueprint $table) {
+            $table->foreignId('permission_id')->constrained('permission');
+            $table->foreignId('user_type_id')->constrained('user_type');
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();
+            $table->primary(['permission_id', 'user_type_id']);
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('employee');
+        Schema::dropIfExists('user_type_permission');
     }
 };
