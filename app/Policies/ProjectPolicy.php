@@ -2,9 +2,10 @@
 
 namespace App\Policies;
 
+use App\Http\Utils\Error;
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ProjectPolicy
 {
@@ -13,7 +14,11 @@ class ProjectPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::VIEW_ANY_PROJECT)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -21,7 +26,17 @@ class ProjectPolicy
      */
     public function view(User $user, $project): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::VIEW_PROJECT)) {
+            return true;
+        }
+
+        if ($user->hasPermission(Permission::VIEW_YOUR_PROJECT)) {
+            if ($user->id == $project->created_by || $project->employees()->where('user_id', $user->id)->exists()) {
+                return true;
+            }
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -29,7 +44,11 @@ class ProjectPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::CREATE_PROJECT)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -37,7 +56,11 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::UPDATE_PROJECT) || $user->id == $project->created_by) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -45,7 +68,11 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::DELETE_PROJECT) || $user->id == $project->created_by) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -53,7 +80,7 @@ class ProjectPolicy
      */
     public function restore(User $user, Project $project): bool
     {
-        return true;
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -61,6 +88,6 @@ class ProjectPolicy
      */
     public function forceDelete(User $user, Project $project): bool
     {
-        return true;
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 }

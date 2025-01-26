@@ -3,7 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\Permission;
+use App\Models\User;
 use App\Models\UserType;
+use Arr;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\DB;
 
@@ -19,20 +21,24 @@ class UserTypePermissionFactory extends Factory
      */
     public function definition(): array
     {
-        do {
-            $userTypeId = fake()->randomElement(UserType::all()->pluck('id')->toArray());
-            $permissionId = fake()->randomElement(Permission::all()->pluck('id')->toArray());
+        $userTypes = UserType::inRandomOrder()->pluck('id')->toArray();
+        $permissions = Permission::inRandomOrder()->pluck('id')->toArray();
 
-            $exists = DB::table('user_type_permission')
-                ->where('user_type_id', $userTypeId)
-                ->where('permission_id', $permissionId)
-                ->exists();
-        } while ($exists);
+        foreach ($permissions as $permission) {
+            foreach ($userTypes as $userType) {
+                $exists = DB::table('user_type_permission')
+                    ->where('user_type_id', $userType)
+                    ->where('permission_id', $permission)
+                    ->exists();
 
-        return [
-            'user_type_id' => $userTypeId,
-            'permission_id' => $permissionId,
-            'created_by' => fake()->randomElement(UserType::all()->pluck('id')->toArray()),
-        ];
+                if (!$exists) {
+                    return [
+                        'user_type_id' => $userType,
+                        'permission_id' => $permission,
+                        'created_by' => Arr::random(User::all()->pluck('id')->toArray()),
+                    ];
+                }
+            }
+        }
     }
 }

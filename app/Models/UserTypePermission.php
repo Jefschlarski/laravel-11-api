@@ -41,7 +41,7 @@ class UserTypePermission extends Model
         return $this->belongsTo(Permission::class, 'permission_id');
     }
 
-    public function user_type()
+    public function userType()
     {
         return $this->belongsTo(UserType::class, 'user_type_id');
     }

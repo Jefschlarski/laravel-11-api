@@ -18,7 +18,7 @@ class EmployeeTypeController extends Controller
     public function index(Request $request)
     {
         if ($request->user()->cannot('viewAny', EmployeeType::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(EmployeeTypeCollection::make(EmployeeType::paginate(
@@ -32,7 +32,7 @@ class EmployeeTypeController extends Controller
     public function store(Request $request)
     {
         if ($request->user()->cannot('create', EmployeeType::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $validator = Validator::make($request->all(),[
@@ -49,7 +49,7 @@ class EmployeeTypeController extends Controller
         $employeeType->created_by = auth()->user()->id;
 
         if (!$employeeType->save()) {
-            return Error::makeResponse('Employee type creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.creation_error', ['attribute' => 'Employee type']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(EmployeeTypeResource::make($employeeType), 201);
@@ -61,11 +61,11 @@ class EmployeeTypeController extends Controller
     public function show(Request $request, int $id)
     {
         if (!$employeeType = EmployeeType::find($id)) {
-            return Error::makeResponse('Employee type not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Employee Type']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('view', $employeeType)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(EmployeeTypeResource::make($employeeType), 200);
@@ -86,11 +86,11 @@ class EmployeeTypeController extends Controller
         }
 
         if (!$employeeType = EmployeeType::find($id)) {
-            return Error::makeResponse('Employee type not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Employee Type']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('update', $employeeType)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $employeeType->fill($validator->validated());
@@ -108,11 +108,11 @@ class EmployeeTypeController extends Controller
     public function destroy(Request $request, int $id)
     {
         if (!$employeeType = EmployeeType::find($id)) {
-            return Error::makeResponse('Employee type not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Employee Type']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('delete', $employeeType)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $employeeType->delete();

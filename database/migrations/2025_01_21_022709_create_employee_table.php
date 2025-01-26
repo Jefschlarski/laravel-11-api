@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('employee', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_type_id')->constrained('employee_type');
+            $table->foreignId('project_id')->constrained('project');
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();
+            $table->unique(['project_id', 'user_id']);
         });
     }
 

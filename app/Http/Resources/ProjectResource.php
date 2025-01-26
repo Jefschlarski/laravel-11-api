@@ -19,7 +19,12 @@ class ProjectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'created_by' => $this->created_by,
+            'is_active' => $this->is_active,
+            'tasks_quantity' => $this->tasksQuantity(),
+            'created_by' => [
+                'id' => $this->createdBy->id,
+                'name' => $this->createdBy->name
+            ],
         ];
     }
 }

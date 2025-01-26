@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Http\Utils\Error;
+use App\Models\Permission;
 use App\Models\TaskStatus;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
@@ -13,7 +15,11 @@ class TaskStatusPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::VIEW_ANY_TASK_STATUS)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -21,7 +27,11 @@ class TaskStatusPolicy
      */
     public function view(User $user, TaskStatus $taskStatus): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::VIEW_TASK_STATUS)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -29,7 +39,11 @@ class TaskStatusPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::CREATE_TASK_STATUS)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -37,7 +51,11 @@ class TaskStatusPolicy
      */
     public function update(User $user, TaskStatus $taskStatus): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::UPDATE_TASK_STATUS)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -45,7 +63,11 @@ class TaskStatusPolicy
      */
     public function delete(User $user, TaskStatus $taskStatus): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::DELETE_TASK_STATUS)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**

@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('title', 255);
             $table->text('description')->nullable();
+            $table->timestamp('due_date')->nullable();
             $table->foreignId('project_id')->constrained('project');
             $table->foreignId('task_status_id')->constrained('task_status');
             $table->foreignId('created_by')->nullable()->constrained('users');
+            $table->timestamp('closed_at')->nullable();
             $table->timestamps();
         });
     }

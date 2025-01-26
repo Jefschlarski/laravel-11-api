@@ -25,6 +25,8 @@ class TaskFactory extends Factory
         return [
             'title' => fake()->title(),
             'description' => fake()->text(50),
+            'due_date' => fake()->date(),
+            'closed_at' => fake()->date(),
             'project_id' => fake()->randomElement($project_ids),
             'task_status_id' => fake()->randomElement($task_status_ids),
             'created_by' => fake()->randomElement($user_ids),

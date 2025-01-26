@@ -18,7 +18,7 @@ class TaskStatusController extends Controller
     public function index(Request $request)
     {
         if ($request->user()->cannot('viewAny', TaskStatus::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusCollection::make(TaskStatus::paginate(
@@ -32,11 +32,11 @@ class TaskStatusController extends Controller
     public function store(Request $request)
     {
         if ($request->user()->cannot('create', TaskStatus::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $validator = Validator::make($request->all(),[
-            'name' => 'required|string|max:255',
+            'name' => 'required|unique:task_status|string|max:255',
             'description' => 'required|string',
         ]);
 
@@ -51,7 +51,7 @@ class TaskStatusController extends Controller
         $task_status->created_by = auth()->user()->id;
 
         if (!$task_status->save()) {
-            return Error::makeResponse('Task status creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.creation_error', ['attribute' => 'Task Status']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusResource::make($task_status), 201);
@@ -64,11 +64,11 @@ class TaskStatusController extends Controller
     {
         $task_status = TaskStatus::find($id);
         if (!$task_status) {
-            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task Status']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('view', $task_status)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusResource::make($task_status), 200);
@@ -80,7 +80,7 @@ class TaskStatusController extends Controller
     public function update(Request $request, int $id)
     {
         $validator = Validator::make($request->all(),[
-            'name' => 'string|max:255',
+            'name' => 'unique:task_status|string|max:255',
             'description' => 'string',
         ]);
 
@@ -90,18 +90,18 @@ class TaskStatusController extends Controller
 
         $task_status = TaskStatus::find($id);
         if (!$task_status) {
-            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task Status']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('update', $task_status)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $task_status->fill($validator->validated());
 
 
         if (!$task_status->save()) {
-            return Error::makeResponse('Task status update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.update_error', ['attribute' => 'Task status']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskStatusResource::make($task_status), 200);
@@ -113,11 +113,11 @@ class TaskStatusController extends Controller
     public function destroy(Request $request, int $id)
     {
         if (!$task_status = TaskStatus::find($id)) {
-            return Error::makeResponse('Task status not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task Status']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('delete', $task_status)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         $task_status->delete();

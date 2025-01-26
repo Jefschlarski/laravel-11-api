@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('employee_type', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name', 50)->unique();
             $table->text('description')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();

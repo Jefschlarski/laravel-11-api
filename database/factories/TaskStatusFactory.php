@@ -19,7 +19,7 @@ class TaskStatusFactory extends Factory
     {
         $user_ids = User::all()->pluck('id');
         return [
-            'name' => fake()->name(),
+            'name' => fake()->unique()->name(),
             'description' => fake()->text(50),
             'created_by' => fake()->randomElement($user_ids),
         ];

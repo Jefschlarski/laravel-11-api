@@ -14,6 +14,7 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
+        'is_active',
         'created_by',
     ];
 
@@ -22,8 +23,13 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function tasksQuantity(): int
+    {
+        return $this->tasks()->count();
+    }
+
     public function createdBy()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

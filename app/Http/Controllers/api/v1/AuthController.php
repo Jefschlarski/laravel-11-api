@@ -29,11 +29,11 @@ class AuthController extends Controller
         $user->password = Hash::make($request->password);
 
         if (!$user->save()) {
-            return Error::makeResponse('User creation failed', Error::INTERNAL_SERVER_ERROR);
+            return Error::makeResponse(__('errors.creation_error', ['attribute' => 'User']), Error::INTERNAL_SERVER_ERROR);
         }
 
         if (!$token = $user->createToken('auth_token')->plainTextToken) {
-            return Error::makeResponse('User auth token generation failed', Error::INTERNAL_SERVER_ERROR);
+            return Error::makeResponse(__('errors.create_token_error'), Error::INTERNAL_SERVER_ERROR);
         }
 
         return response()->json([
@@ -55,11 +55,11 @@ class AuthController extends Controller
         }
 
         if (!auth()->attempt($validator->validated())) {
-            return Error::makeResponse('Invalid credentials', Error::UNAUTHORIZED);
+            return Error::makeResponse(__('auth.failed'), Error::UNAUTHORIZED);
         }
 
         if (!$token = auth()->user()->createToken('auth_token')->plainTextToken) {
-            return Error::makeResponse('User auth token generation failed', Error::INTERNAL_SERVER_ERROR);
+            return Error::makeResponse(__('errors.create_token_error'), Error::INTERNAL_SERVER_ERROR);
         }
 
         return response()->json([
@@ -74,6 +74,6 @@ class AuthController extends Controller
         if ($request->user()->currentAccessToken()->delete()) {
             return response()->noContent();
         }
-        return Error::makeResponse('Logout failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+        return Error::makeResponse(__('errors.logout_error'), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
     }
 }

@@ -16,19 +16,20 @@ class Employee extends Model
     protected $fillable = [
         'employee_type_id',
         'user_id',
+        'project_id',
         'created_by',
     ];
 
     public function changeEmployeeType(int $employee_type_id): Error | null
     {
         if ($this->employee_type_id == $employee_type_id) {
-            return new Error('The new employee type needs to be different from the current one', Error::INVALID_DATA);
+            return new Error(__('errors.different_value_required', ['attribute' => 'employee_type_id']), Error::INVALID_DATA);
         }
 
         $this->employee_type_id = $employee_type_id;
 
         if (!$this->save()) {
-            return new Error('Failed to change employee type', Error::INTERNAL_SERVER_ERROR);
+            return new Error(__('errors.update_error', ['attribute' => 'employee_type_id']), Error::INTERNAL_SERVER_ERROR);
         }
 
         return null;
@@ -42,6 +43,11 @@ class Employee extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function createdBy()

@@ -47,7 +47,7 @@ class Error
             'error' => $message,
             'code' => $httpCode
         ];
-        if ($failurePoint != '' && Gate::allows('view-point-of-failure')) {
+        if ($failurePoint != '' && Gate::check('view-point-of-failure')) {
             $response['failure_point'] = $failurePoint;
         }
         return response()->json($response, $httpCode);

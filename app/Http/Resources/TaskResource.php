@@ -18,6 +18,8 @@ class TaskResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
+            'due_date' => $this->due_date,
+            'closed_at' => $this->closed_at,
             'created_by' => [
                 'id' => $this->createdBy->id,
                 'name' => $this->createdBy->name
@@ -28,7 +30,7 @@ class TaskResource extends JsonResource
             'project' => [
                 'id' => $this->project->id,
                 'name' => $this->project->name
-            ]
+            ],
         ];
     }
 }

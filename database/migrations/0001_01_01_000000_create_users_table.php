@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Models\UserType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,6 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+
+        $user_sistema = [
+            'name' => 'Sistema',
+            'email' => 'sistema@root.com',
+            'password' => '$2y$12$oGdLapE80gjj6V2nSaiANO9wCjmOEhLeXvhMUH3XV2Z4FhKf7vWyO',
+        ];
+
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -35,6 +44,8 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+
+        User::create($user_sistema);
     }
 
     /**

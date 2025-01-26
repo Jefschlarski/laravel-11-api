@@ -7,6 +7,7 @@ use App\Http\Resources\ProjectCollection;
 use App\Http\Resources\ProjectResource;
 use App\Http\Utils\Error;
 use App\Models\Project;
+use Gate;
 use Illuminate\Http\Request;
 use Validator;
 
@@ -17,9 +18,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->cannot('viewAny', Project::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('viewAny', Project::class);
 
         return response()->json(ProjectCollection::make(Project::paginate(
             perPage: 20,
@@ -32,9 +31,7 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
 
-        if ($request->user()->cannot('create', Project::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('create', Project::class);
 
         $validator = Validator::make($request->all(),[
             'name' => 'required|string|max:255',
@@ -42,7 +39,7 @@ class ProjectController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return Error::makeResponse($validator->errors(), Error::INVALID_DATA, Error::getTraceAndMakePointOfFailure());
         }
 
         $project = new Project();
@@ -50,7 +47,7 @@ class ProjectController extends Controller
         $project->created_by = auth()->user()->id;
 
         if (!$project->save()) {
-            return Error::makeResponse('Project creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.creation_error', ['attribute' => 'Project']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(ProjectResource::make($project), 201);
@@ -64,16 +61,10 @@ class ProjectController extends Controller
         $project = Project::find($id);
 
         if (!$project) {
-            return response()->json([
-                'message' => 'Project not found'
-            ], 404);
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Project']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        if ($request->user()->cannot('view', $project)) {
-            return response()->json([
-                'message' => 'Unauthorized',
-            ], 401);
-        }
+        Gate::allows('view', $project);
 
         return response()->json(ProjectResource::make($project), 200);
     }
@@ -98,19 +89,15 @@ class ProjectController extends Controller
         $project = Project::find($id);
 
         if (!$project) {
-            return response()->json([
-                'message' => 'Project not found'
-            ], 404);
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Project']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        if ($request->user()->cannot('update', $project)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('update', $project);
 
         $project->fill($validated);
 
         if (!$project->save()) {
-            return Error::makeResponse('Project update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.update_error', ['attribute' => 'Project']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(ProjectResource::make($project), 200);
@@ -124,14 +111,10 @@ class ProjectController extends Controller
         $project = Project::find($id);
 
         if (!$project) {
-            return response()->json([
-                'message' => 'Project not found'
-            ], 404);
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Project']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        if ($request->user()->cannot('delete', $project)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('delete', $project);
 
         $project->delete();
 

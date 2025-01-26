@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Http\Utils\Error;
 use App\Models\Employee;
 use App\Models\EmployeeType;
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskStatus;
@@ -41,52 +42,82 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(EmployeeType::class, policy: EmployeeTypePolicy::class);
 
-        /**
-         * @todo check if the user is root from the moment I have already implemented the user permissions and the user type
-        */
         Gate::define('view-point-of-failure', function ()
         {
-            return true;
+            return auth()->user()->userType->isRoot() ? true : false;
         });
 
         Gate::define('access-projects', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::ACCESS_PROJECTS)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('access-tasks', function ()
         {
             return true;
+            if (auth()->user()->hasPermission(Permission::ACCESS_TASKS)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('access-employees', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::ACCESS_EMPLOYEE)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('update', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::UPDATE)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('delete', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::DELETE)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('create', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::CREATE)) {
+                return true;
+            };
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('view', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::VIEW)) {
+                return true;
+            }
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
 
         Gate::define('list', function ()
         {
-            return true;
+            if (auth()->user()->hasPermission(Permission::LIST)) {
+                return true;
+            }
+
+            abort(Error::makeResponse(__('errors.unauthorized'), Error::FORBIDDEN));
         });
     }
 }

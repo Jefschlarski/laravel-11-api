@@ -2,18 +2,27 @@
 
 namespace App\Policies;
 
+use App\Http\Utils\Error;
+use App\Models\Permission;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TaskPolicy
 {
+
+    /**
+     * Determine whether the user can view models they are part of.
+     */
+    public function viewIfItsAffiliate(User $user) {
+        return $user->hasPermission(Permission::VIEW_TASKS_IF_ITS_AFFILIATE);
+    }
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasPermission(Permission::VIEW_ANY_TASK);
     }
 
     /**
@@ -21,7 +30,21 @@ class TaskPolicy
      */
     public function view(User $user, Task $task): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::VIEW_TASK)) {
+            return true;
+        }
+
+        if ($task->project->employees()->where('user_id', $user->id)->exists()) {
+            return true;
+        }
+
+        if ($user->hasPermission(Permission::VIEW_YOUR_TASK)) {
+            if ($user->id == $task->created_by) {
+                return true;
+            }
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -29,7 +52,11 @@ class TaskPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::CREATE_TASK)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -37,7 +64,11 @@ class TaskPolicy
      */
     public function update(User $user, Task $task): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::UPDATE_TASK)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -45,7 +76,11 @@ class TaskPolicy
      */
     public function delete(User $user, Task $task): bool
     {
-        return true;
+        if ($user->hasPermission(Permission::DELETE_TASK)) {
+            return true;
+        }
+
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -53,7 +88,7 @@ class TaskPolicy
      */
     public function restore(User $user, Task $task): bool
     {
-        return true;
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 
     /**
@@ -61,6 +96,6 @@ class TaskPolicy
      */
     public function forceDelete(User $user, Task $task): bool
     {
-        return true;
+        abort(Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED));
     }
 }

@@ -7,7 +7,9 @@ use App\Http\Resources\TaskCollection;
 use App\Http\Resources\TaskResource;
 use App\Http\Utils\Error;
 use App\Models\Task;
+use Gate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Validator;
 
 class TaskController extends Controller
@@ -17,13 +19,17 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->cannot('viewAny', Task::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+        $per_page = 20;
+        if (Gate::allows('viewAny', Task::class)){
+            return response()->json(TaskCollection::make(Task::paginate(
+                perPage: $per_page,
+            )), 200);
+        }
+        if (Gate::allows('viewIfItsAffiliate', Task::class)) {
+            return response()->json(TaskCollection::make(auth()->user()->tasksIfItsAffiliate($per_page)), 200);
         }
 
-        return response()->json(TaskCollection::make(Task::paginate(
-            perPage: 20,
-        )), 200);
+        return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
     }
 
     /**
@@ -31,13 +37,12 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->user()->cannot('create', task::class)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('create', Task::class);
 
         $validator = Validator::make($request->all(),[
             'title' => 'required|string|max:255',
             'description' => 'string',
+            'due_date' => 'date',
             'task_status_id' => 'required|integer|exists:task_status,id',
             'project_id' => 'required|integer|exists:project,id',
         ]);
@@ -52,7 +57,7 @@ class TaskController extends Controller
         $task->created_by = auth()->user()->id;
 
         if (!$task->save()) {
-            return Error::makeResponse('Task creation failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.creation_error', ['attribute' => 'Task']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskResource::make($task), 201);
@@ -65,11 +70,11 @@ class TaskController extends Controller
     {
         $task = Task::find($id);
         if (!$task) {
-            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
         if ($request->user()->cannot('view', $task)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.unauthorized'), Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskResource::make($task), 200);
@@ -83,6 +88,7 @@ class TaskController extends Controller
         $validator = Validator::make($request->all(),[
             'title' => 'string|max:255',
             'description' => 'string',
+            'due_date' => 'date|nullable',
             'task_status_id' => 'integer|exists:task_status,id',
             'project_id' => 'integer|exists:project,id',
         ]);
@@ -93,17 +99,15 @@ class TaskController extends Controller
 
         $task = Task::find($id);
         if (!$task) {
-            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        if ($request->user()->cannot('update', $task)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('update', $task);
 
         $task->fill($validator->validated());
 
         if (!$task->save()) {
-            return Error::makeResponse('Task update failed', Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.update_error', ['attribute' => 'Task']), Error::INTERNAL_SERVER_ERROR, Error::getTraceAndMakePointOfFailure());
         }
 
         return response()->json(TaskResource::make($task), 200);
@@ -116,12 +120,10 @@ class TaskController extends Controller
     {
         $task = Task::find($id);
         if (!$task) {
-            return Error::makeResponse('Task not found', Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
+            return Error::makeResponse(__('errors.not_found', ['attribute' => 'Task']), Error::NOT_FOUND, Error::getTraceAndMakePointOfFailure());
         }
 
-        if ($request->user()->cannot('delete', $task)) {
-            return Error::makeResponse('Unauthorized', Error::UNAUTHORIZED, Error::getTraceAndMakePointOfFailure());
-        }
+        Gate::allows('delete', $task);
 
         $task->delete();
 

@@ -21,24 +21,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        UserType::factory()->create([
-            'name' => 'Admin',
-            'description' => 'Admin User Type'
-        ]);
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'user_type_id' => 1
+            'user_type_id' => UserType::ADMIN,
         ]);
 
-        UserType::factory(15)->create();
+        User::factory()->create([
+            'name' => 'Test User Employee',
+            'email' => 'employee@example.com',
+            'user_type_id' => UserType::EMPLOYEE,
+        ]);
 
-        Permission::factory(30)->create();
+        // UserType::factory(5)->create();
+
+        // Permission::factory(40)->create();
 
         User::factory(15)->create();
-
-        UserTypePermission::factory(30)->create();
 
         Project::factory(50)->create();
 
@@ -48,6 +47,8 @@ class DatabaseSeeder extends Seeder
 
         EmployeeType::factory(50)->create();
 
-        Employee::factory(50)->create();
+        // UserTypePermission::factory(15)->create();
+
+        Employee::factory(15)->create();
     }
 }

@@ -21,6 +21,7 @@ class ProjectFactory extends Factory
         return [
             'name' => fake()->name(),
             'description' => fake()->text(50),
+            'is_active' => fake()->boolean(),
             'created_by' => fake()->randomElement($user_ids),
         ];
     }
